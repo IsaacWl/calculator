@@ -13,6 +13,7 @@ class Calculator {
     this.calculation = '';
     this.value = '';
     this.result = null;
+    this.operators = [];
     this.history = [];
     this.signals = ['*', '-', '+', '%', '/', '.', 'x', '÷', ','];
     this.operatorsRegex = /x|\-|\+|\%|\/|÷/;
@@ -53,10 +54,22 @@ class Calculator {
 
   historyLeft() {
     if (!this.value) return;
+    if (this.operators.includes(this.value[this.value.length - 1])) {
+      this.operators.pop();
+      if (!this.operators.length) {
+        this.currentNumber = this.value.replace(',', '.');
+      } else {
+        const operator = this.operators.pop();
+        this.currentNumber = this.value.slice(
+          this.value.lastIndexOf(operator) + 1
+        );
+      }
+    }
     this.history.push(this.value[this.value.length - 1]);
     this.value = this.removeLastCharacter(this.value);
+    this.currentNumber = this.removeLastCharacter(this.currentNumber);
     this.calculation = this.removeLastCharacter(this.calculation);
-    this.screen.srcdoc = this.srcdoc.replace('{VALUE}', this.value);
+    this.display(this.value);
   }
 
   historyRight() {
@@ -64,18 +77,19 @@ class Calculator {
     const value = this.history.pop();
     this.value += value;
     this.calculation = value;
-    this.screen.srcdoc = this.srcdoc.replace('{VALUE}', this.value);
+    this.display(this.value);
   }
 
   clearScreen() {
     this.reset();
-    this.screen.srcdoc = this.srcdoc.replace('{VALUE}', this.value);
+    this.display(this.value);
   }
 
   enterNumber(ev) {
     this.currentNumber += ev.target.value;
 
     this.value += ev.target.value;
+
     this.calculation += ev.target.value;
 
     if (
@@ -87,35 +101,26 @@ class Calculator {
       this.calculation = this.calculation.slice(1);
     }
 
-    this.screen.srcdoc = this.srcdoc.replace('{VALUE}', this.value);
+    this.display(this.value);
   }
 
   enterSymbol(ev) {
     if (!this.value) return;
     if (ev.target.value === ',' && this.currentNumber.includes('.')) return;
     if (this.signals.includes(this.value[this.value.length - 1])) return;
-    if (ev.target.value === ',') this.currentNumber += ev.target.dataset.value;
-    else this.currentNumber = '';
+    if (ev.target.value === ',') {
+      this.currentNumber += ev.target.dataset.value;
+    } else {
+      this.operators.push(ev.target.value);
+      this.currentNumber = '';
+    }
 
     this.value += ev.target.value;
-
-    const dots = this.count(this.value, ',');
-    const operators = this.countOperators(this.value);
-
-    if (operators > 0 && dots - operators > 1) {
-      this.value = this.removeLastCharacter(this.value);
-      return;
-    }
-
-    if (operators === 0 && dots > 1) {
-      this.value = this.removeLastCharacter(this.value);
-      return;
-    }
 
     if (ev.target.dataset.value) this.calculation += ev.target.dataset.value;
     else this.calculation += ev.target.value;
 
-    this.screen.srcdoc = this.srcdoc.replace('{VALUE}', this.value);
+    this.display(this.value);
   }
 
   removeLastCharacter(value) {
@@ -136,6 +141,10 @@ class Calculator {
 
   countOperators(value) {
     return this.count(value, this.operatorsRegex);
+  }
+
+  display(value) {
+    this.screen.srcdoc = this.srcdoc.replace('{VALUE}', value);
   }
 }
 
