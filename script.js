@@ -8,7 +8,8 @@ class Calculator {
     this.equalsButton = this.select('#equals');
     this.clearButton = this.select('#clear');
     this.leftButton = this.select('#leftButton');
-    this.rightButton = this.select('#rightButton');
+    this.parenthesesButton = this.select('#parentheses');
+    // this.rightButton = this.select('#rightButton');
     this.currentNumber = '';
     this.calculation = '';
     this.value = '';
@@ -25,6 +26,9 @@ class Calculator {
   }
 
   events() {
+    this.parenthesesButton.addEventListener('click', () =>
+      this.enterParentheses()
+    );
     this.numberButtons.forEach((button) =>
       button.addEventListener('click', (ev) => this.enterNumber(ev))
     );
@@ -34,7 +38,7 @@ class Calculator {
     this.equalsButton.addEventListener('click', () => this.calculate());
     this.clearButton.addEventListener('click', () => this.clearScreen());
     this.leftButton.addEventListener('click', () => this.historyLeft());
-    this.rightButton.addEventListener('click', () => this.historyRight());
+    // this.rightButton.addEventListener('click', () => this.historyRight());
   }
 
   calculate() {
@@ -72,13 +76,13 @@ class Calculator {
     this.display(this.value);
   }
 
-  historyRight() {
-    if (!this.history.length) return;
-    const value = this.history.pop();
-    this.value += value;
-    this.calculation = value;
-    this.display(this.value);
-  }
+  // historyRight() {
+  //   if (!this.history.length) return;
+  //   const value = this.history.pop();
+  //   this.value += value;
+  //   this.calculation = value;
+  //   this.display(this.value);
+  // }
 
   clearScreen() {
     this.reset();
@@ -120,6 +124,28 @@ class Calculator {
     if (ev.target.dataset.value) this.calculation += ev.target.dataset.value;
     else this.calculation += ev.target.value;
 
+    this.display(this.value);
+  }
+
+  enterParentheses() {
+    if (!this.value) {
+      this.value += '(';
+      this.calculation += '(';
+      this.display(this.value);
+      return;
+    }
+    if (this.value.includes('(') && !this.value.includes(')')) {
+      this.value += ')';
+      this.calculation += ')';
+    } else {
+      if (this.operatorsRegex.test(this.value[this.value.length - 1])) {
+        this.value += '(';
+        this.calculation += '(';
+      } else {
+        this.value += ')';
+        this.calculation += ')';
+      }
+    }
     this.display(this.value);
   }
 
